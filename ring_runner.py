@@ -52,9 +52,9 @@ BG = pygame.image.load(os.path.join('assets/Other', 'Track.png'))
 class Player:
 
     X_POS = 80
-    Y_POS = 310
-    Y_POS_DUCK = 340
-    JUMP_VEL = 8.5
+    Y_POS = 340
+    Y_POS_DUCK = 300
+    JUMP_VEL = 7.5
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -83,7 +83,7 @@ class Player:
         if self.step_index >= 10:
             self.step_index = 0
 
-        if userInput[pygame.K_UP] and not self.dino_jump:
+        if userInput[pygame.K_UP] or userInput[pygame.K_SPACE] and not self.dino_jump:
             self.dino_duck = False
             self.dino_run = False
             self.dino_jump = True
