@@ -1,20 +1,26 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+"""
+Author: Yichen (Kevin) Wang
+Date: May 27, 2021
+Program name: Ring Runner
+"""
+
+import pygame.math
 import pygame
 import os
 import threading
 import random
+
+# Game Initiation
 pygame.init()
 
 # Global Constants
-
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 1100
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 pygame.display.set_caption('Ring Runner')
 
-Ico = pygame.image.load('assets/DinoWallpaper.png')
+Ico = pygame.image.load('assets/Player/LaserOn/PlayerRunLaserOn1.png')
 pygame.display.set_icon(Ico)
 
 PLAYER_LASER_ON_PATH = "assets/Player/LaserOn"
@@ -35,25 +41,41 @@ SMALL_ROBOT = [pygame.image.load(os.path.join('assets/Robot',
                pygame.image.load(os.path.join('assets/Robot',
                                                'Robot1.png'))]
 LARGE_ROBOT = [pygame.image.load(os.path.join('assets/Robot',
-                                               'Robot1.png')),
+                                               'Robot2.png')),
                pygame.image.load(os.path.join('assets/Robot',
-                                               'Robot1.png')),
+                                               'Robot2.png')),
                pygame.image.load(os.path.join('assets/Robot',
-                                               'Robot1.png'))]
+                                               'Robot2.png'))]
 
 DRONE = [pygame.image.load(os.path.join('assets/Drone', 'Drone1.png')),
          pygame.image.load(os.path.join('assets/Drone', 'Drone2.png'))]
 
-CLOUD = pygame.image.load(os.path.join('assets/Other', 'Cloud.png'))
+STAR = pygame.image.load(os.path.join('assets/Other', 'Star.png'))
 
-BG = pygame.image.load(os.path.join('assets/Other', 'Track.png'))
+BULLET = pygame.image.load(os.path.join('assets/Other', 'Bullet.png'))
+
+BG = pygame.image.load(os.path.join('assets/Other', 'NewTrack.png'))
+
+class Bullet:
+    def __init__(self, xpos, ypos):
+        self.x = xpos
+        self.y = ypos
+        self.image = BULLET
+        self.width = self.image.get_width()
+        self.flying = False
+
+    def update(self):
+        self.x += 10
+
+    def draw(self, SCREEN):
+        SCREEN.blit(self.image, (self.x, self.y))
 
 
 class Player:
 
     X_POS = 80
-    Y_POS = 340
-    Y_POS_DUCK = 300
+    Y_POS = 330
+    Y_POS_DUCK = 365
     JUMP_VEL = 7.5
 
     def __init__(self):
@@ -72,7 +94,12 @@ class Player:
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
 
+        self.bullet_count = 5
+        self.bullet = Bullet(self.dino_rect.x + 100, self.dino_rect.y)
+
+
     def update(self, userInput):
+
         if self.dino_duck:
             self.duck()
         if self.dino_run:
@@ -83,6 +110,8 @@ class Player:
         if self.step_index >= 10:
             self.step_index = 0
 
+        if userInput[pygame.K_RIGHT] and self.bullet_count > 0:
+            self.shoot()
         if userInput[pygame.K_UP] or userInput[pygame.K_SPACE] and not self.dino_jump:
             self.dino_duck = False
             self.dino_run = False
@@ -119,23 +148,29 @@ class Player:
             self.dino_jump = False
             self.jump_vel = self.JUMP_VEL
 
+    def shoot(self):
+        self.bullet_count -= 1
+        self.bullet.flying = True
+        # Re-create a bullet
+        self.bullet = Bullet(self.dino_rect.x + 100, self.dino_rect.y)
+
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.dino_rect.x, self.dino_rect.y))
 
 
-class Cloud:
+class Star:
 
     def __init__(self):
         self.x = SCREEN_WIDTH + random.randint(800, 1000)
-        self.y = random.randint(50, 100)
-        self.image = CLOUD
+        self.y = random.randint(50, 200)
+        self.image = STAR
         self.width = self.image.get_width()
 
     def update(self):
         self.x -= game_speed
         if self.x < -self.width:
             self.x = SCREEN_WIDTH + random.randint(2500, 3000)
-            self.y = random.randint(50, 100)
+            self.y = random.randint(50, 200)
 
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.x, self.y))
@@ -194,10 +229,10 @@ def main():
     run = True
     clock = pygame.time.Clock()
     player = Player()
-    cloud = Cloud()
+    star = Star()
     game_speed = 20
     x_pos_bg = 0
-    y_pos_bg = 380
+    y_pos_bg = 350
     points = 0
     font = pygame.font.Font('freesansbold.ttf', 20)
     obstacles = []
@@ -212,6 +247,12 @@ def main():
         text = font.render('Points: ' + str(points), True, (0, 0, 0))
         textRect = text.get_rect()
         textRect.center = (1000, 40)
+        SCREEN.blit(text, textRect)
+
+    def bullet_count():
+        text = font.render('Bullet Count: ' + str(player.bullet_count), True, (0, 0, 0))
+        textRect = text.get_rect()
+        textRect.center = (100, 40)
         SCREEN.blit(text, textRect)
 
     def background():
@@ -232,7 +273,14 @@ def main():
         SCREEN.fill((255, 255, 255))
         userInput = pygame.key.get_pressed()
 
+        background()
+
+        star.draw(SCREEN)
+        star.update()
+
         player.draw(SCREEN)
+        player.bullet.draw(SCREEN)
+        player.bullet.update()
         player.update(userInput)
 
         if len(obstacles) == 0:
@@ -244,19 +292,23 @@ def main():
                 obstacles.append(Drone(DRONE))
 
         for obstacle in obstacles:
+            # TODO: Fix the bullet not able to collide with obstacle
+            if player.bullet.image.get_rect().colliderect(obstacle.rect):
+                print("COLLIDE")
+                obstacles.remove(obstacle)
             obstacle.draw(SCREEN)
             obstacle.update()
             if player.dino_rect.colliderect(obstacle.rect):
-                pygame.time.delay(2000)
+                pygame.time.delay(1000)
                 death_count += 1
                 menu(death_count)
 
-        background()
-
-        cloud.draw(SCREEN)
-        cloud.update()
-
         score()
+        bullet_count()
+
+        # Recharge one bullet per around 1 second
+        if player.bullet_count < 5 and pygame.time.get_ticks() % 1000 < 50:
+            player.bullet_count += 1
 
         clock.tick(30)
         pygame.display.update()
@@ -270,19 +322,35 @@ def menu(death_count):
         font = pygame.font.Font('freesansbold.ttf', 30)
 
         if death_count == 0:
-            text = font.render('Press any Key to Start', True, (0, 0,
-                                                                0))
+            text = font.render('PRESS ANY KEY TO START', True, (0, 0,0))
+            text2 = font.render('You are an astronaut on a space station', True, (0, 0, 0))
+            text3 = font.render('Your plan to escape but you have to shut down', True, (0, 0, 0))
+            text4 = font.render('The evil AI who hacked this space station', True, (0, 0, 0))
+
+            text2Rect = text2.get_rect()
+            text3Rect = text3.get_rect()
+            text4Rect = text4.get_rect()
+            text2Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30)
+            text3Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 0)
+            text4Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30)
+
+            SCREEN.blit(text2, text2Rect)
+            SCREEN.blit(text3, text3Rect)
+            SCREEN.blit(text4, text4Rect)
+
         elif death_count > 0:
-            text = font.render('Press any Key to Restart', True, (0, 0,
-                                                                  0))
-            score = font.render('Your Score: ' + str(points), True, (0,
-                                                                     0, 0))
+            text = font.render('Press any Key to Restart', True, (0, 0, 0))
+            score = font.render('Your Score: ' + str(points), True, (0, 0, 0))
             scoreRect = score.get_rect()
-            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
-                                + 50)
+            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
             SCREEN.blit(score, scoreRect)
+            text_death = font.render('You got caught by an AI sentinel', True, (0, 0, 0))
+            text_death_rect = text_death.get_rect()
+            text_death_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+            SCREEN.blit(text_death, text_death_rect)
+
         textRect = text.get_rect()
-        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)
         SCREEN.blit(text, textRect)
         SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT
                                  // 2 - 140))
