@@ -82,29 +82,29 @@ class Player:
         self.run_img = RUNNING
         self.jump_img = JUMPING
 
-        self.dino_duck = False
-        self.dino_run = True
-        self.dino_jump = False
+        self.player_duck = False
+        self.player_run = True
+        self.player_jump = False
 
         self.step_index = 0
         self.jump_vel = self.JUMP_VEL
         self.image = self.run_img[0]
-        self.dino_rect = self.image.get_rect()
-        self.dino_rect.x = self.X_POS
-        self.dino_rect.y = self.Y_POS
+        self.player_rect = self.image.get_rect()
+        self.player_rect.x = self.X_POS
+        self.player_rect.y = self.Y_POS
 
         self.bullet_count = 5
-        self.bullet = Bullet(self.dino_rect.x + 100, self.dino_rect.y)
+        self.bullet = Bullet(self.player_rect.x + 100, self.player_rect.y)
 
         self.gravity_multiplier = 0.8
 
     def update(self, userInput):
 
-        if self.dino_duck:
+        if self.player_duck:
             self.duck()
-        if self.dino_run:
+        if self.player_run:
             self.run()
-        if self.dino_jump:
+        if self.player_jump:
             self.jump()
 
         if self.step_index >= 10:
@@ -112,50 +112,50 @@ class Player:
 
         if userInput[pygame.K_RIGHT] and self.bullet_count > 0:
             self.shoot()
-        if userInput[pygame.K_UP] or userInput[pygame.K_SPACE] and not self.dino_jump:
-            self.dino_duck = False
-            self.dino_run = False
-            self.dino_jump = True
-        elif userInput[pygame.K_DOWN] and not self.dino_jump:
-            self.dino_duck = True
-            self.dino_run = False
-            self.dino_jump = False
-        elif not (self.dino_jump or userInput[pygame.K_DOWN]):
-            self.dino_duck = False
-            self.dino_run = True
-            self.dino_jump = False
+        if userInput[pygame.K_UP] or userInput[pygame.K_SPACE] and not self.player_jump:
+            self.player_duck = False
+            self.player_run = False
+            self.player_jump = True
+        elif userInput[pygame.K_DOWN] and not self.player_jump:
+            self.player_duck = True
+            self.player_run = False
+            self.player_jump = False
+        elif not (self.player_jump or userInput[pygame.K_DOWN]):
+            self.player_duck = False
+            self.player_run = True
+            self.player_jump = False
 
     def duck(self):
         self.image = self.duck_img[self.step_index // 5]
-        self.dino_rect = self.image.get_rect()
-        self.dino_rect.x = self.X_POS
-        self.dino_rect.y = self.Y_POS_DUCK
+        self.player_rect = self.image.get_rect()
+        self.player_rect.x = self.X_POS
+        self.player_rect.y = self.Y_POS_DUCK
         self.step_index += 1
 
     def run(self):
         self.image = self.run_img[self.step_index // 5]
-        self.dino_rect = self.image.get_rect()
-        self.dino_rect.x = self.X_POS
-        self.dino_rect.y = self.Y_POS
+        self.player_rect = self.image.get_rect()
+        self.player_rect.x = self.X_POS
+        self.player_rect.y = self.Y_POS
         self.step_index += 1
 
     def jump(self):
         self.image = self.jump_img
-        if self.dino_jump:
-            self.dino_rect.y -= self.jump_vel * 4
+        if self.player_jump:
+            self.player_rect.y -= self.jump_vel * 4
             self.jump_vel -= self.gravity_multiplier
         if self.jump_vel < -self.JUMP_VEL:
-            self.dino_jump = False
+            self.player_jump = False
             self.jump_vel = self.JUMP_VEL
 
     def shoot(self):
         self.bullet_count -= 1
         self.bullet.flying = True
         # Re-create a bullet
-        self.bullet = Bullet(self.dino_rect.x + 100, self.dino_rect.y)
+        self.bullet = Bullet(self.player_rect.x + 100, self.player_rect.y)
 
     def draw(self, SCREEN):
-        SCREEN.blit(self.image, (self.dino_rect.x, self.dino_rect.y))
+        SCREEN.blit(self.image, (self.player_rect.x, self.player_rect.y))
 
 
 class Star:
@@ -318,7 +318,7 @@ def main():
                 obstacles.remove(obstacle)
             obstacle.draw(SCREEN)
             obstacle.update()
-            if player.dino_rect.colliderect(obstacle.rect):
+            if player.player_rect.colliderect(obstacle.rect):
                 pygame.time.delay(1000)
                 death_count += 1
                 menu(death_count)
