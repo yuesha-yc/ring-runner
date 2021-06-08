@@ -26,13 +26,11 @@ pygame.display.set_icon(Ico)
 PLAYER_LASER_ON_PATH = "assets/Player/LaserOn"
 PLAYER_LASER_OFF_PATH = "assets/Player/LaserOff"
 
-RUNNING = [pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH, 'PlayerRunLaserOn1.png'
-                                          )), pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH,
-                                                                             'PlayerRunLaserOn2.png'))]
+RUNNING = [pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH, 'PlayerRunLaserOn1.png')),
+           pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH, 'PlayerRunLaserOn2.png'))]
 JUMPING = pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH, 'PlayerJumpLaserOn.png'))
-DUCKING = [pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH, 'PlayerDuckLaserOn1.png'
-                                          )), pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH,
-                                                                             'PlayerDuckLaserOn2.png'))]
+DUCKING = [pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH, 'PlayerDuckLaserOn1.png')),
+           pygame.image.load(os.path.join(PLAYER_LASER_ON_PATH, 'PlayerDuckLaserOn2.png'))]
 
 SMALL_ROBOT = [pygame.image.load(os.path.join('assets/Robot',
                                                'Robot1.png')),
@@ -97,6 +95,7 @@ class Player:
         self.bullet_count = 5
         self.bullet = Bullet(self.dino_rect.x + 100, self.dino_rect.y)
 
+        self.gravity_multiplier = 0.8
 
     def update(self, userInput):
 
@@ -143,7 +142,7 @@ class Player:
         self.image = self.jump_img
         if self.dino_jump:
             self.dino_rect.y -= self.jump_vel * 4
-            self.jump_vel -= 0.8
+            self.jump_vel -= self.gravity_multiplier
         if self.jump_vel < -self.JUMP_VEL:
             self.dino_jump = False
             self.jump_vel = self.JUMP_VEL
@@ -162,7 +161,7 @@ class Star:
 
     def __init__(self):
         self.x = SCREEN_WIDTH + random.randint(800, 1000)
-        self.y = random.randint(50, 200)
+        self.y = random.randint(50, 100)
         self.image = STAR
         self.width = self.image.get_width()
 
@@ -170,7 +169,7 @@ class Star:
         self.x -= game_speed
         if self.x < -self.width:
             self.x = SCREEN_WIDTH + random.randint(2500, 3000)
-            self.y = random.randint(50, 200)
+            self.y = random.randint(50, 100)
 
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.x, self.y))
@@ -225,7 +224,7 @@ class Drone(Obstacle):
 
 
 def main():
-    global game_speed, x_pos_bg, y_pos_bg, points, obstacles
+    global game_speed, x_pos_bg, y_pos_bg, points, obstacles, highscore
     run = True
     clock = pygame.time.Clock()
     player = Player()
@@ -234,25 +233,46 @@ def main():
     x_pos_bg = 0
     y_pos_bg = 350
     points = 0
-    font = pygame.font.Font('freesansbold.ttf', 20)
+    font = pygame.font.Font('assets/minecraft_font.ttf', 20)
+    big_font = pygame.font.Font('assets/minecraft_font.ttf', 60)
     obstacles = []
     death_count = 0
+    highscore = 0
 
     def score():
         global points, game_speed
         points += 1
         if points % 100 == 0:
             game_speed += 1
+        if points % 1000 == 0:
+            player.gravity_multiplier -= 0.1
+        if points >= 1000 and points % 1000 <= 100 and points % 20 < 10:
+            warn_text = big_font.render("WARNING! GRAVITY DECREASE!", True, (205, 13, 22))
+            warn_rect = warn_text.get_rect()
+            warn_rect.center = (550, 200)
+            SCREEN.blit(warn_text, warn_rect)
+        if points == 5000:
+            menu(-1)
 
         text = font.render('Points: ' + str(points), True, (0, 0, 0))
+        gravity_text = font.render("Current Gravity: " + str(player.gravity_multiplier / 0.8 * 9.8) + "m/s^2", True, (0, 0, 0))
         textRect = text.get_rect()
+        gravity_text_rect = gravity_text.get_rect()
         textRect.center = (1000, 40)
+        gravity_text_rect.center = (900, 100)
         SCREEN.blit(text, textRect)
+        SCREEN.blit(gravity_text, gravity_text_rect)
+
+        highscore_text = font.render('Highscore: ' + str(highscore), True, (0, 0, 0))
+        highscore_rect = highscore_text.get_rect()
+        highscore_rect.center = (980, 70)
+        SCREEN.blit(highscore_text, highscore_rect)
 
     def bullet_count():
         text = font.render('Bullet Count: ' + str(player.bullet_count), True, (0, 0, 0))
         textRect = text.get_rect()
-        textRect.center = (100, 40)
+        textRect.x = 40
+        textRect.y = 40
         SCREEN.blit(text, textRect)
 
     def background():
@@ -319,7 +339,15 @@ def menu(death_count):
     run = True
     while run:
         SCREEN.fill((255, 255, 255))
-        font = pygame.font.Font('freesansbold.ttf', 30)
+        font = pygame.font.Font('assets/minecraft_font.ttf', 30)
+        big_font = pygame.font.Font('assets/minecraft_font.ttf', 50)
+
+        if death_count == -1:
+            text = font.render('Press any Key to Restart', True, (0, 0, 0))
+            warn_text = big_font.render("CONGRATULATIONS! YOU ESCAPED!", True, (14, 105, 173))
+            warn_rect = warn_text.get_rect()
+            warn_rect.center = (550, 300)
+            SCREEN.blit(warn_text, warn_rect)
 
         if death_count == 0:
             text = font.render('PRESS ANY KEY TO START', True, (0, 0,0))
@@ -330,9 +358,9 @@ def menu(death_count):
             text2Rect = text2.get_rect()
             text3Rect = text3.get_rect()
             text4Rect = text4.get_rect()
-            text2Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30)
+            text2Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 40)
             text3Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 0)
-            text4Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30)
+            text4Rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40)
 
             SCREEN.blit(text2, text2Rect)
             SCREEN.blit(text3, text3Rect)
@@ -341,6 +369,7 @@ def menu(death_count):
         elif death_count > 0:
             text = font.render('Press any Key to Restart', True, (0, 0, 0))
             score = font.render('Your Score: ' + str(points), True, (0, 0, 0))
+            highscore = score
             scoreRect = score.get_rect()
             scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
             SCREEN.blit(score, scoreRect)
