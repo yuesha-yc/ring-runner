@@ -54,6 +54,7 @@ BULLET = pygame.image.load(os.path.join('assets/Other', 'Bullet.png'))
 
 BG = pygame.image.load(os.path.join('assets/Other', 'NewTrack.png'))
 
+
 class Bullet:
     def __init__(self, xpos, ypos):
         self.x = xpos
@@ -254,7 +255,7 @@ def main():
             menu(-1)
 
         text = font.render('Points: ' + str(points), True, (0, 0, 0))
-        gravity_text = font.render("Current Gravity: " + str(player.gravity_multiplier / 0.8 * 9.8) + "m/s^2", True, (0, 0, 0))
+        gravity_text = font.render("Current Gravity: " + str(round(player.gravity_multiplier / 0.8 * 9.8, 2)) + "m/s^2", True, (0, 0, 0))
         textRect = text.get_rect()
         gravity_text_rect = gravity_text.get_rect()
         textRect.center = (1000, 40)
@@ -335,7 +336,6 @@ def main():
 
 def menu(death_count):
     global points, highscore
-    highscore = 0
     run = True
     while run:
         SCREEN.fill((255, 255, 255))
@@ -350,6 +350,8 @@ def menu(death_count):
             SCREEN.blit(warn_text, warn_rect)
 
         elif death_count == 0:
+            highscore = 0
+
             text = font.render('PRESS ANY KEY TO START', True, (0, 0,0))
             text2 = font.render('You are an astronaut on a space station', True, (0, 0, 0))
             text3 = font.render('Your plan to escape but you have to shut down', True, (0, 0, 0))
@@ -369,14 +371,22 @@ def menu(death_count):
         elif death_count > 0:
             text = font.render('Press any Key to Restart', True, (0, 0, 0))
             score = font.render('Your Score: ' + str(points), True, (0, 0, 0))
-            highscore = points
+            if (points >= highscore):
+                highscore = points
+                new_high_score_text = font.render('NEW HIGHSCORE: ' + str(highscore), True, (14, 105, 173))
+                new_high_score_rect = new_high_score_text.get_rect()
+                new_high_score_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60)
+                SCREEN.blit(new_high_score_text, new_high_score_rect)
+
             scoreRect = score.get_rect()
-            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
+            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20)
             SCREEN.blit(score, scoreRect)
             text_death = font.render('You got caught by an AI sentinel', True, (0, 0, 0))
             text_death_rect = text_death.get_rect()
-            text_death_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+            text_death_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20)
             SCREEN.blit(text_death, text_death_rect)
+
+
 
         textRect = text.get_rect()
         textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)
