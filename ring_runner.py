@@ -18,11 +18,14 @@ SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 1100
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+# Setup window caption
 pygame.display.set_caption('Ring Runner')
 
+# Setup program dock icon
 Ico = pygame.image.load('assets/Player/LaserOn/PlayerRunLaserOn1.png')
 pygame.display.set_icon(Ico)
 
+# Load assets
 PLAYER_LASER_ON_PATH = "assets/Player/LaserOn"
 PLAYER_LASER_OFF_PATH = "assets/Player/LaserOff"
 
@@ -54,7 +57,9 @@ BULLET = pygame.image.load(os.path.join('assets/Other', 'Bullet.png'))
 
 BG = pygame.image.load(os.path.join('assets/Other', 'NewTrack.png'))
 
-
+"""
+A bullet that player shoots
+"""
 class Bullet:
     def __init__(self, xpos, ypos):
         self.x = xpos
@@ -70,6 +75,9 @@ class Bullet:
         SCREEN.blit(self.image, (self.x, self.y))
 
 
+"""
+The player entity in the game
+"""
 class Player:
 
     X_POS = 80
@@ -158,6 +166,9 @@ class Player:
         SCREEN.blit(self.image, (self.player_rect.x, self.player_rect.y))
 
 
+"""
+Decorative elements. The game takes place on a space station so you can see stars. 
+"""
 class Star:
 
     def __init__(self):
@@ -176,6 +187,9 @@ class Star:
         SCREEN.blit(self.image, (self.x, self.y))
 
 
+"""
+The superclass of all obstacles in the game.
+"""
 class Obstacle:
 
     def __init__(self, image, type):
@@ -193,6 +207,9 @@ class Obstacle:
         SCREEN.blit(self.image[self.type], self.rect)
 
 
+"""
+Child class of Obstacle. Ground obstacle. 
+"""
 class SmallRobot(Obstacle):
 
     def __init__(self, image):
@@ -201,6 +218,9 @@ class SmallRobot(Obstacle):
         self.rect.y = 325
 
 
+"""
+Child class of Obstacle. Ground obstacle. Larger. 
+"""
 class LargeRobot(Obstacle):
 
     def __init__(self, image):
@@ -209,6 +229,9 @@ class LargeRobot(Obstacle):
         self.rect.y = 300
 
 
+"""
+Child class of Obstacle. Flying obstacle. 
+"""
 class Drone(Obstacle):
 
     def __init__(self, image):
@@ -224,6 +247,9 @@ class Drone(Obstacle):
         self.index += 1
 
 
+"""
+Main game loop. Initializes the game. 
+"""
 def main():
     global game_speed, x_pos_bg, y_pos_bg, points, obstacles, highscore
     run = True
@@ -251,7 +277,7 @@ def main():
             warn_rect = warn_text.get_rect()
             warn_rect.center = (550, 200)
             SCREEN.blit(warn_text, warn_rect)
-        if points == 5000:
+        if points == 100:
             menu(-1)
 
         text = font.render('Points: ' + str(points), True, (0, 0, 0))
@@ -334,6 +360,14 @@ def main():
         pygame.display.update()
 
 
+"""
+Menu screen of the game. 
+Contains three states in the loop distinguished by a single flag parameter.
+Serves as the launch method of the game. 
+1) New Game
+2) Failed Game
+3) Succeeded Game
+"""
 def menu(death_count):
     global points, highscore
     run = True
@@ -404,5 +438,6 @@ def menu(death_count):
                 main()
 
 
+# Start the game on a single thread
 t1 = threading.Thread(target=menu(death_count=0), daemon=True)
 t1.start()
