@@ -237,7 +237,6 @@ def main():
     big_font = pygame.font.Font('assets/minecraft_font.ttf', 60)
     obstacles = []
     death_count = 0
-    highscore = 0
 
     def score():
         global points, game_speed
@@ -335,7 +334,8 @@ def main():
 
 
 def menu(death_count):
-    global points
+    global points, highscore
+    highscore = 0
     run = True
     while run:
         SCREEN.fill((255, 255, 255))
@@ -349,7 +349,7 @@ def menu(death_count):
             warn_rect.center = (550, 300)
             SCREEN.blit(warn_text, warn_rect)
 
-        if death_count == 0:
+        elif death_count == 0:
             text = font.render('PRESS ANY KEY TO START', True, (0, 0,0))
             text2 = font.render('You are an astronaut on a space station', True, (0, 0, 0))
             text3 = font.render('Your plan to escape but you have to shut down', True, (0, 0, 0))
@@ -369,7 +369,7 @@ def menu(death_count):
         elif death_count > 0:
             text = font.render('Press any Key to Restart', True, (0, 0, 0))
             score = font.render('Your Score: ' + str(points), True, (0, 0, 0))
-            highscore = score
+            highscore = points
             scoreRect = score.get_rect()
             scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
             SCREEN.blit(score, scoreRect)
